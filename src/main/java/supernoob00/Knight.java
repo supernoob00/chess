@@ -38,4 +38,9 @@ public class Knight extends Piece {
     public boolean canMove(Position dest, Board board) {
         return false;
     }
+
+    @Override
+    public boolean sees(Piece piece, Board board) {
+        return false;
+    }
 }

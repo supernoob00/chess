@@ -84,6 +84,10 @@ public class Position {
         return Position.get(0,0);
     }
 
+    public int getRowIndex() {
+        return this.row;
+    }
+
     public boolean validMove(int rowShift, int colShift) {
         boolean validRow = this.row + rowShift <= ROW_COUNT;
         boolean validCol = this.col + colShift <= COL_COUNT;

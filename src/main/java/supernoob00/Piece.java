@@ -1,8 +1,6 @@
 package supernoob00;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 
 public abstract class Piece {
     protected final Color color;
@@ -21,9 +19,18 @@ public abstract class Piece {
         return this.value;
     }
 
-    public abstract Set<Position> getLegalMoves(Board board);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Piece piece = (Piece) o;
+        return value == piece.value && color == piece.color;
+    }
 
-    public boolean canMove(Position dest, Board board) {
-        return getLegalMoves(board).contains(dest);
-    };
+    @Override
+    public int hashCode() {
+        return Objects.hash(color, value);
+    }
 }

@@ -10,6 +10,10 @@ public enum Color {
         this.colorName = colorName;
     }
 
+    public Color opposite() {
+        return this == WHITE ? BLACK : WHITE;
+    }
+
     @Override
     public String toString() {
         return this.colorName;

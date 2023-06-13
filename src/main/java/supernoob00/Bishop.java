@@ -1,8 +1,8 @@
 package supernoob00;
 
-public class Bishop extends Slider {
+public class Bishop extends SliderPiece {
     public Bishop(Color color, int value) {
         super(color, 3);
-        this.directions = Direction.getOrdinal();
+        this.moveDirections = Direction.getOrdinal();
     }
 }

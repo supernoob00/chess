@@ -19,7 +19,10 @@ public class Player {
         if (!legalMoves.contains(dest)) {
             throw new IllegalMoveException();
         }
+
         board.removePiece(dest);
         board.setPiece(dest, piece);
     }
+
+    public void
 }

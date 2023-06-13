@@ -1,7 +1,5 @@
 package supernoob00;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 public enum Direction {
@@ -32,6 +30,19 @@ public enum Direction {
 
     private Direction opposite;
 
+    public static Set<Direction> getAll() {
+        return Set.of(
+                UP,
+                DOWN,
+                LEFT,
+                RIGHT,
+                UP_LEFT,
+                UP_RIGHT,
+                DOWN_RIGHT,
+                DOWN_LEFT
+        );
+    }
+
     public static Set<Direction> getCardinal() {
         return Set.of(UP, DOWN, LEFT, RIGHT);
     }
@@ -40,7 +51,7 @@ public enum Direction {
         return Set.of(UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT);
     }
 
-    public Direction getOpposite() {
+    public Direction opposite() {
         return this.opposite;
     }
 }
