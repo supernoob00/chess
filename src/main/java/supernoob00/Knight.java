@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class Knight extends Piece {
+public class Knight extends MovablePiece {
 
     public Knight(Color color, int value) {
         super(color, value);
@@ -41,6 +41,21 @@ public class Knight extends Piece {
 
     @Override
     public boolean sees(Piece piece, Board board) {
+        return false;
+    }
+
+    @Override
+    public Set<Board> pseudoLegalMoves(Position start, Board board) {
+        return null;
+    }
+
+    @Override
+    public boolean canMove(Position start, Board before, Board after) {
+        return false;
+    }
+
+    @Override
+    public boolean threatens(Position start, Position threatened, Board board) {
         return false;
     }
 }

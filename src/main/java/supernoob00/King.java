@@ -1,8 +1,11 @@
 package supernoob00;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-public class King extends Piece implements Moveable {
+public class King extends MovablePiece {
     public static boolean inCheck(Color color, Board board) {
         Position kingPos = board.getKingPosition(color);
         Color enemyColor = color.opposite();
@@ -30,17 +33,27 @@ public class King extends Piece implements Moveable {
         this.moveDirections = Direction.getAll();
     }
 
-    public Set<Board> allMoves(Position start, Board board) {
+    @Override
+    public Set<Board> pseudoLegalMoves(Position start, Board board) {
         Position next;
         for (Direction dir : this.moveDirections) {
             if (!start.hasNext(dir)) {
-                break;
+                continue;
             }
             next = start.move(dir);
             Piece nextPiece = board.getPiece(next);
-            if (nextPiece == null || nextPiece.getColor() != this.color) {
-                Board testBoard = board.getNewBoard()
+
+            Set<Position> removal = new HashSet<Position>(1);
+            Map<Position, Piece> placement = new HashMap<Position, Piece>(1);
+
+            removal.add(start);
+
+            if (nextPiece == null) {
+                placement.put(next, this);
+                Board testBoard = board.getNewBoard(removal, )
             }
+
+            else
         }
     }
 

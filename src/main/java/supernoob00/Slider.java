@@ -1,26 +1,12 @@
 package supernoob00;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-public abstract class SliderPiece extends Piece implements Moveable {
+public abstract class Slider extends MovablePiece {
     protected Set<Direction> moveDirections;
 
-    public SliderPiece(Color color, int value) {
+    public Slider(Color color, int value) {
         super(color, value);
-    }
-
-    @Override
-    public Set<Board> getLegalMoves(Position start, Board board) {
-        Set<Board> allMoves = new HashSet<Board>();
-        for (Direction dir : this.moveDirections) {
-            List<Board> moves = directionalMoves(start, dir, board);
-            allMoves.addAll(moves);
-        }
-        Set<Board> legalMoves = allMoves.stream()
-                .filter(brd -> King.inCheck(this.color, brd))
-                .collect(Collectors.toSet());
-        return legalMoves;
     }
 
     @Override
@@ -29,15 +15,25 @@ public abstract class SliderPiece extends Piece implements Moveable {
         return legalMoves.contains(after);
     }
 
+    @Override
+    public Set<Board> pseudoLegalMoves(Position start, Board board) {
+        Set<Board> moves = new HashSet<Board>();
+        for (Direction dir : this.moveDirections) {
+            Set<Board> dirMoves = directionalMoves(start, dir, board);
+            moves.addAll(dirMoves);
+        }
+        return moves;
+    }
+
     // moves in a given direction
-    protected List<Board> directionalMoves(Position start, Direction dir, Board board) {
-        List<Board> moves = new ArrayList<Board>();
+    protected Set<Board> directionalMoves(Position start, Direction dir, Board board) {
+        Set<Board> moves = new HashSet<Board>();
         Position current = start;
         while (current.hasNext(dir)) {
             Position next = current.move(dir);
             Piece nextPiece = board.getPiece(next);
 
-            if (nextPiece != null && this.color == nextPiece.color) {
+            if (friendlyPiece(nextPiece)) {
                 break;
             }
 
@@ -65,7 +61,9 @@ public abstract class SliderPiece extends Piece implements Moveable {
         Position current = start;
         while (current != threatened) {
             current = current.move(dir);
-            if (current != threatened && board.getPiece(current) != null) {
+            if (current != threatened
+                    && board.getPiece(current) != null
+                    && board.getPiece(current).getColor() != this.color) {
                 return false;
             }
         }

@@ -19,6 +19,14 @@ public abstract class Piece {
         return this.value;
     }
 
+    public boolean friendlyPiece(Piece piece) {
+        return (piece != null) && (piece.getColor() == this.color);
+    }
+
+    public boolean enemyPiece(Piece piece) {
+        return (piece != null) && (piece.getColor() != this.color);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
