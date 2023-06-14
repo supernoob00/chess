@@ -2,17 +2,11 @@ package supernoob00;
 
 import java.util.*;
 
-public abstract class Slider extends MovablePiece {
+public abstract class Slider extends Piece {
     protected Set<Direction> moveDirections;
 
-    public Slider(Color color, int value) {
-        super(color, value);
-    }
-
-    @Override
-    public boolean canMove(Position start, Board before, Board after) {
-        Set<Board> legalMoves = getLegalMoves(start, before);
-        return legalMoves.contains(after);
+    protected Slider(Color color) {
+        super(color);
     }
 
     @Override
@@ -33,19 +27,14 @@ public abstract class Slider extends MovablePiece {
             Position next = current.move(dir);
             Piece nextPiece = board.getPiece(next);
 
-            if (friendlyPiece(nextPiece)) {
+            if (friendly(nextPiece)) {
                 break;
             }
 
-            Set<Position> toRemove = new HashSet<Position>();
-            toRemove.add(current);
-            Map<Position, Piece> toPlace = Map.of(next, this);
+            Board testBoard = new Board(board);
+            testBoard.removePiece(start);
+            testBoard.setPiece(next, this);
 
-            if (nextPiece != null) {
-                toRemove.add(next);
-            }
-
-            Board testBoard = board.getNewBoard(toRemove, toPlace);
             moves.add(testBoard);
             current = next;
         }
@@ -55,17 +44,16 @@ public abstract class Slider extends MovablePiece {
     @Override
     public boolean threatens(Position start, Position threatened, Board board) {
         Direction dir = start.directionOf(threatened);
-        if (!this.moveDirections.contains(dir)) {
+        Piece threatenedPiece = board.getPiece(threatened);
+        if (!this.moveDirections.contains(dir) || friendly(threatenedPiece)) {
             return false;
         }
-        Position current = start;
+        Position current = start.move(dir);
         while (current != threatened) {
-            current = current.move(dir);
-            if (current != threatened
-                    && board.getPiece(current) != null
-                    && board.getPiece(current).getColor() != this.color) {
+            if (board.getPiece(current) != null) {
                 return false;
             }
+            current = current.move(dir);
         }
         return true;
     }

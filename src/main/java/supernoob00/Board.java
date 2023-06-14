@@ -4,10 +4,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Board {
-    private Map<Position, Piece> board;
+    private Map<Position, ChessObject> board;
 
     public Board() {
-        this.board = new HashMap<Position, Piece>(Position.ROW_COUNT * Position.COL_COUNT);
+        this.board = new HashMap<Position, ChessObject>(Position.ROW_COUNT * Position.COL_COUNT);
         for (Position pos : Position.POSITIONS) {
                 this.board.put(pos, null);
         }
@@ -15,51 +15,48 @@ public class Board {
 
     // copy constructor for Board class
     public Board(Board other) {
-        this.board = new HashMap<Position, Piece>(other.board);
+        this.board = new HashMap<Position, ChessObject>(other.board);
     }
 
     // returns new Board copy with applied changes
-    public Board getNewBoard(Set<Position> removals, Map<Position, Piece> placements) {
+    public Board getNewBoard(Map<Position, ChessObject> changes) {
         Board testBoard = new Board(this);
-        for (Position pos : removals) {
-            testBoard.removePiece(pos);
-        }
-        for (Position pos : placements.keySet()) {
-            testBoard.setPiece(pos, placements.get(pos));
+        for (Position pos : changes.keySet()) {
+            testBoard.setPiece(pos, changes.get(pos));
         }
         return testBoard;
     }
 
     public Piece getPiece(Position pos) {
-        if (this.board.get(pos) instanceof PawnTrail) {
-            return null;
-        }
-        return this.board.get(pos);
+        ChessObject piece = this.board.get(pos);
+        // excludes PawnTrails
+        return (piece instanceof Piece) ? (Piece) piece : null;
     }
 
-    public Piece getPawnTrail(Position pos) {
-        if (this.board.get(pos) instanceof PawnTrail) {
-            this.board.get(pos);
-        }
-        return null;
+    public PawnTrail getPawnTrail(Position pos) {
+        ChessObject piece = this.board.get(pos);
+        return (piece instanceof PawnTrail) ? (PawnTrail) piece : null;
     }
 
-    public void removePiece(Position pos) throws IllegalStateException {
-        Piece piece = this.board.get(pos);
-        if (piece == null) {
-            throw new IllegalStateException("Cannot remove piece on an empty board position.");
-        }
+    public ChessObject removePiece(Position pos) {
+        ChessObject piece = this.board.get(pos);
         this.board.replace(pos, null);
+        return piece;
     }
 
-    public void setPiece(Position pos, Piece piece) throws IllegalStateException {
-        if (this.board.get(pos) != null) {
-            throw new IllegalStateException("Board position must be empty to set piece.");
+    public List<ChessObject> removePieces(Position... lop) {
+        List<ChessObject> pieces = new ArrayList<ChessObject>();
+        for (Position pos : lop) {
+            pieces.add(removePiece(pos));
         }
+        return pieces;
+    }
+
+    public void setPiece(Position pos, ChessObject piece) {
         this.board.replace(pos, piece);
     }
 
-    public List<Piece> getPieces() {
+    public List<ChessObject> getPieces() {
         return this.board.values()
                 .stream()
                 .filter(piece -> piece != null)
@@ -76,7 +73,7 @@ public class Board {
 
     public Position getKingPosition(Color color) throws IllegalStateException {
         for (Position pos : this.board.keySet()) {
-            Piece piece = this.board.get(pos);
+            ChessObject piece = this.board.get(pos);
             if (piece instanceof King && piece.getColor() == color) {
                 return pos;
             }
@@ -99,5 +96,18 @@ public class Board {
                 board.append("\n");
         }
         return board.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Board other = (Board) o;
+        return Objects.equals(this.board, other.board);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.board.hashCode();
     }
 }

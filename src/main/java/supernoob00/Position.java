@@ -1,51 +1,29 @@
 package supernoob00;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
-
-import static supernoob00.Direction.UP;
 
 public class Position {
     public final static Position INVALID_POSITION = new Position(-1, -1);
 
-    public final static int ROW_COUNT = 8;
-    public final static int COL_COUNT = 8;
-    public final static int DIAG_COUNT = ROW_COUNT * 2 - 1;
-
-    public final static List<Position> POSITIONS;
-    public final static List<Position> COL_POSITIONS;
-    public final static List<Position> DIAG_POSITIONS;
-    public final static List<Position> ANTIDIAG_POSITIONS;
+    private final static int ROW_COUNT = 8;
+    private final static int COL_COUNT = 8;
+    private final static List<Position> POSITIONS;
 
     static {
         int size = ROW_COUNT * COL_COUNT;
-
         POSITIONS = new ArrayList<Position>(size);
-        COL_POSITIONS = new ArrayList<Position>(size);
-        DIAG_POSITIONS = new ArrayList<Position>(size);
-        ANTIDIAG_POSITIONS = new ArrayList<Position>(size);
 
         for (int row = 0; row < ROW_COUNT; row++) {
             for (int col = 0; col < COL_COUNT; col++) {
                 Position pos = new Position(row, col);
                 POSITIONS.add(pos);
-                // COL_POSITIONS.add(COL_COUNT * col + row, pos);
             }
         }
-
-        /*
-        for (int diagIndex = 0; diagIndex < DIAG_COUNT; diagIndex++) {
-            for (int insideIndex = 0; insideIndex < diagIndex + 1; insideIndex++) {
-                Position pos = Position.get(diagIndex, insideIndex);
-                DIAG_POSITIONS.add(pos);
-            }
-        } */
     }
+
+    private final int row;
+    private final int col;
 
     public static boolean sameRow(Position pos1, Position pos2) {
         return pos1.row == pos2.row;
@@ -61,8 +39,6 @@ public class Position {
         return sameSum || sameDifference;
     }
 
-    private int row;
-    private int col;
 
     private Position(int row, int col) {
         this.row = row;
@@ -84,10 +60,6 @@ public class Position {
         return Position.get(0,0);
     }
 
-    public int getRowIndex() {
-        return this.row;
-    }
-
     public boolean validMove(int rowShift, int colShift) {
         boolean validRow = this.row + rowShift <= ROW_COUNT;
         boolean validCol = this.col + colShift <= COL_COUNT;
@@ -99,21 +71,13 @@ public class Position {
     }
 
     public Position move(Direction dir, int count) {
-        Position dest = this;
-        switch (dir) {
-            case UP:
-                dest = up(count);
-                break;
-            case DOWN:
-                dest = down(count);
-                break;
-            case RIGHT:
-                dest = right(count);
-                break;
-            case LEFT:
-                dest = left(count);
-                break;
-        }
+        Position dest = switch (dir) {
+            case UP -> up(count);
+            case DOWN -> down(count);
+            case RIGHT -> right(count);
+            case LEFT -> left(count);
+            default -> this;
+        };
         return dest;
     }
 
@@ -153,6 +117,13 @@ public class Position {
         return right(1);
     }
 
+    public boolean hasNext(Direction dir, int dist) {
+        if (move(dir, dist) == INVALID_POSITION) {
+            return false;
+        }
+        return true;
+    }
+
     public boolean hasNext(Direction dir) {
         if (move(dir) == INVALID_POSITION) {
             return false;
@@ -160,10 +131,19 @@ public class Position {
         return true;
     }
 
+    public int rowDistance(Position pos) {
+        return Math.abs(pos.row - this.row);
+    }
+
+    public int colDistance(Position pos) {
+        return Math.abs(pos.col - this.col);
+    }
+
     // TODO : clean this up
     public Direction directionOf(Position pos) {
         if (this == pos) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(
+                    "Position argument cannot be same as 'this'.");
         }
         if (Position.sameRow(this, pos)) {
             boolean toRight = pos.col - this.col > 0;
@@ -194,18 +174,6 @@ public class Position {
             return diagDir;
         }
         return Direction.OTHER;
-    }
-
-    public List<Position> getRow() {
-        int startIndex = ROW_COUNT * this.row;
-        int endIndex = startIndex + COL_COUNT;
-        return POSITIONS.subList(startIndex, endIndex);
-    }
-
-    public List<Position> getCol() {
-        int startIndex = COL_COUNT * this.col;
-        int endIndex = startIndex + ROW_COUNT;
-        return COL_POSITIONS.subList(startIndex, endIndex);
     }
 
     public String toString() {

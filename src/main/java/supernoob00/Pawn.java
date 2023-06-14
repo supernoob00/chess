@@ -2,12 +2,14 @@ package supernoob00;
 
 import java.util.*;
 
-public class Pawn extends MovablePiece {
+public class Pawn extends Piece implements Valued {
+    private int value;
     private Direction moveDirection;
     private Set<Direction> takeDirections;
 
     public Pawn(Color color) {
-        super(color, 1);
+        super(color);
+        this.value = 1;
         if (color == Color.WHITE) {
             moveDirection = Direction.UP;
             takeDirections = Set.of(Direction.UP_LEFT, Direction.UP_RIGHT);
@@ -15,6 +17,11 @@ public class Pawn extends MovablePiece {
             moveDirection = Direction.DOWN;
             takeDirections = Set.of(Direction.DOWN_LEFT, Direction.DOWN_RIGHT);
         }
+    }
+
+    @Override
+    public int getValue() {
+        return this.value;
     }
 
     @Override
@@ -26,13 +33,16 @@ public class Pawn extends MovablePiece {
         return moves;
     }
 
-    @Override
-    public boolean canMove(Position start, Board before, Board after) {
-        return false;
-    }
-
+    // Does not check for any possible en passant move
     @Override
     public boolean threatens(Position start, Position threatened, Board board) {
+        for (Direction takeDir : this.takeDirections) {
+            if (start.hasNext(takeDir)
+                    && threatened == start.move(takeDir)
+                    && !friendly(board.getPiece(threatened))) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -41,9 +51,8 @@ public class Pawn extends MovablePiece {
         Direction moveDir = this.moveDirection;
         Position current = start;
 
-        // forward movement
         while (current.hasNext(moveDir)
-                && Math.abs(start.getRowIndex() - current.getRowIndex()) <= 2) {
+                && start.rowDistance(current) <= 2) {
             Position next = current.move(moveDir);
             Piece nextPiece = board.getPiece(next);
 
@@ -51,11 +60,11 @@ public class Pawn extends MovablePiece {
                 break;
             }
 
-            Set<Position> toRemove = Set.of(current);
-            Map<Position, Piece> toPlace = Map.of(next, this);
-            Board testBoard = board.getNewBoard(toRemove, toPlace);
-
+            Board testBoard = new Board(board);
+            testBoard.removePiece(start);
+            testBoard.setPiece(next, this);
             testBoards.add(testBoard);
+
             current = next;
         }
         return testBoards;
@@ -69,10 +78,10 @@ public class Pawn extends MovablePiece {
             }
             Position next = start.move(takeDir);
             Piece piece = board.getPiece(next);
-            if (piece != null && piece.getColor() != this.color) {
-                Set<Position> toRemove = Set.of(start, next);
-                Map<Position, Piece> toPlace = Map.of(next, this);
-                Board testBoard = board.getNewBoard(toRemove, toPlace);
+            if (enemy(piece)) {
+                Board testBoard = new Board(board);
+                testBoard.removePiece(start);
+                testBoard.setPiece(next, this);
                 testBoards.add(testBoard);
             }
         }
@@ -86,12 +95,12 @@ public class Pawn extends MovablePiece {
                 continue;
             }
             Position next = start.move(takeDir);
-            Piece piece = board.getPawnTrail(next);
-            if (piece != null && piece.getColor() != this.color) {
+            PawnTrail trail = board.getPawnTrail(next);
+            if (enemy(trail)) {
                 Position pawnToTake = next.move(this.moveDirection.opposite());
-                Set<Position> toRemove = Set.of(start, next, pawnToTake);
-                Map<Position, Piece> toPlace = Map.of(next, this);
-                Board testBoard = board.getNewBoard(toRemove, toPlace);
+                Board testBoard = new Board(board);
+                board.removePieces(start, pawnToTake);
+                board.setPiece(next, this);
                 testBoards.add(testBoard);
             }
         }

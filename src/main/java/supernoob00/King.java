@@ -1,17 +1,15 @@
 package supernoob00;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-public class King extends MovablePiece {
+public class King extends Piece {
     public static boolean inCheck(Color color, Board board) {
         Position kingPos = board.getKingPosition(color);
         Color enemyColor = color.opposite();
         for (Position pos : board.getPiecePositions(enemyColor)) {
             Piece enemyPiece = board.getPiece(pos);
-            if (enemyPiece.canTake(kingPos, board)) {
+            if (enemyPiece.threatens(pos, kingPos, board)) {
                 return true;
             }
         }
@@ -19,51 +17,54 @@ public class King extends MovablePiece {
     }
 
     public static boolean inCheckmate(Color color, Board board) {
-
+        Position kingPos = board.getKingPosition(color);
+        Piece king = board.getPiece(kingPos);
+        Set<Board> legalMoves = king.getLegalMoves(kingPos, board);
+        return (King.inCheck(color, board)) && (legalMoves.size() == 0);
     }
 
     public static boolean inStalemate(Color color, Board board) {
-
+        Position kingPos = board.getKingPosition(color);
+        Piece king = board.getPiece(kingPos);
+        Set<Board> legalMoves = king.getLegalMoves(kingPos, board);
+        return !(King.inCheck(color, board)) && (legalMoves.size() == 0);
     }
 
-    private Set<Direction> moveDirections;
+    private final Set<Direction> moveDirections;
 
-    public King(Color color, int value) {
-        super(color, -1);
+    public King(Color color) {
+        super(color);
         this.moveDirections = Direction.getAll();
     }
 
     @Override
     public Set<Board> pseudoLegalMoves(Position start, Board board) {
-        Position next;
+        Set<Board> testBoards = new HashSet<Board>();
         for (Direction dir : this.moveDirections) {
             if (!start.hasNext(dir)) {
                 continue;
             }
-            next = start.move(dir);
+
+            Position next = start.move(dir);
             Piece nextPiece = board.getPiece(next);
 
-            Set<Position> removal = new HashSet<Position>(1);
-            Map<Position, Piece> placement = new HashMap<Position, Piece>(1);
-
-            removal.add(start);
-
-            if (nextPiece == null) {
-                placement.put(next, this);
-                Board testBoard = board.getNewBoard(removal, )
+            if (friendly(nextPiece)) {
+                continue;
             }
 
-            else
+            Board testBoard = new Board(board);
+            board.removePiece(start);
+            board.setPiece(next, this);
+            testBoards.add(testBoard);
         }
-    }
-
-    @Override
-    public boolean canMove(Position start, Board before, Board after) {
-        return false;
+        return testBoards;
     }
 
     @Override
     public boolean threatens(Position start, Position threatened, Board board) {
-        return false;
+        Piece threatenedPiece = board.getPiece(threatened);
+        boolean withinDistance = start.rowDistance(threatened) <= 1
+                && start.colDistance(threatened) <= 1;
+        return !friendly(threatenedPiece) && withinDistance;
     }
 }
