@@ -3,12 +3,19 @@ package supernoob00;
 import java.util.*;
 
 public class Pawn extends Piece implements Valued {
+    public final static Pawn WHITE_PAWN = new Pawn(Color.WHITE);
+    public final static Pawn BLACK_PAWN = new Pawn(Color.BLACK);
+
+    public static Pawn getInstance(Color color) {
+        return color == Color.WHITE ? WHITE_PAWN : BLACK_PAWN;
+    }
+
     private int value;
     private Direction moveDirection;
     private Set<Direction> takeDirections;
 
-    public Pawn(Color color) {
-        super(color);
+    protected Pawn(Color color) {
+        super(color, PieceType.PAWN);
         this.value = 1;
         if (color == Color.WHITE) {
             moveDirection = Direction.UP;
@@ -25,8 +32,8 @@ public class Pawn extends Piece implements Valued {
     }
 
     @Override
-    public Set<Board> pseudoLegalMoves(Position start, Board board) {
-        Set<Board> moves = new HashSet<>();
+    public Set<Move> pseudoLegalMoves(Position start, Board board) {
+        Set<Move> moves = new HashSet<Move>();
         moves.addAll(getForwardMoves(start, board));
         moves.addAll(getDiagonalMoves(start, board));
         moves.addAll(getEnPassantMoves(start, board));
@@ -46,8 +53,8 @@ public class Pawn extends Piece implements Valued {
         return false;
     }
 
-    private Set<Board> getForwardMoves(Position start, Board board) {
-        Set<Board> testBoards = new HashSet<Board>();
+    private Set<Move> getForwardMoves(Position start, Board board) {
+        Set<Move> moves = new HashSet<Move>();
         Direction moveDir = this.moveDirection;
         Position current = start;
 
@@ -60,36 +67,32 @@ public class Pawn extends Piece implements Valued {
                 break;
             }
 
-            Board testBoard = new Board(board);
-            testBoard.removePiece(start);
-            testBoard.setPiece(next, this);
-            testBoards.add(testBoard);
+            Move move = new Move(start, next);
+            moves.add(move);
 
             current = next;
         }
-        return testBoards;
+        return moves;
     }
 
-    private Set<Board> getDiagonalMoves(Position start, Board board) {
-        Set<Board> testBoards = new HashSet<Board>();
+    private Set<Move> getDiagonalMoves(Position start, Board board) {
+        Set<Move> moves = new HashSet<Move>();
         for (Direction takeDir : this.takeDirections) {
             if (!start.hasNext(takeDir)) {
                 continue;
             }
             Position next = start.move(takeDir);
-            Piece piece = board.getPiece(next);
-            if (enemy(piece)) {
-                Board testBoard = new Board(board);
-                testBoard.removePiece(start);
-                testBoard.setPiece(next, this);
-                testBoards.add(testBoard);
+            Piece nextPiece = board.getPiece(next);
+            if (enemy(nextPiece)) {
+                Move move = new Move(start, next);
+                moves.add(move);
             }
         }
-        return testBoards;
+        return moves;
     }
 
-    private Set<Board> getEnPassantMoves(Position start, Board board) {
-        Set<Board> testBoards = new HashSet<Board>();
+    private Set<Move> getEnPassantMoves(Position start, Board board) {
+        Set<Move> moves = new HashSet<Move>();
         for (Direction takeDir : this.takeDirections) {
             if (!start.hasNext(takeDir)) {
                 continue;
@@ -97,13 +100,16 @@ public class Pawn extends Piece implements Valued {
             Position next = start.move(takeDir);
             PawnTrail trail = board.getPawnTrail(next);
             if (enemy(trail)) {
-                Position pawnToTake = next.move(this.moveDirection.opposite());
-                Board testBoard = new Board(board);
-                board.removePieces(start, pawnToTake);
-                board.setPiece(next, this);
-                testBoards.add(testBoard);
+                Position takenPawnPos = next.move(this.moveDirection.getOpposite());
+                Move move = new Move(start, next, Move.Special.EN_PASSANT);
+                moves.add(move);
             }
         }
-        return testBoards;
+        return moves;
+    }
+
+    @Override
+    public String toString() {
+        return this.color == Color.WHITE ? "P" : "p";
     }
 }

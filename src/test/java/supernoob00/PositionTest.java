@@ -40,20 +40,22 @@ public class PositionTest {
     }
 
     @Test
-    public void directionOf() {
+    public void directionOfTest() {
         Position pos1 = Position.get(1, 2);
         Position pos2 = Position.get(1, 3);
-
         Position pos4 = Position.get(7, 2);
-
         Position pos5 = Position.get(2, 3);
-
         Position pos6 = Position.get(3,3);
-
         assertEquals(Direction.RIGHT, pos1.directionOf(pos2));
         assertEquals(Direction.DOWN, pos1.directionOf(pos4));
         assertEquals(Direction.DOWN_RIGHT, pos1.directionOf(pos5));
         assertEquals(Direction.UP_LEFT, pos5.directionOf(pos1));
         assertEquals(Direction.OTHER, pos1.directionOf(pos6));
+    }
+
+    @Test
+    public void moveTest() {
+        Position dest = Position.get(1,1).move(Direction.DOWN);
+        assertEquals(Position.get(2,1), dest);
     }
 }

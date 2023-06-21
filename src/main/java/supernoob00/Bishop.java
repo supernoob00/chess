@@ -1,10 +1,17 @@
 package supernoob00;
 
 public class Bishop extends Slider implements Valued {
+    public final static Bishop WHITE_BISHOP = new Bishop(Color.WHITE);
+    public final static Bishop BLACK_BISHOP = new Bishop(Color.BLACK);
+
+    public Bishop getInstance(Color color) {
+        return color == Color.WHITE ? WHITE_BISHOP : BLACK_BISHOP;
+    }
+
     private final int value;
 
-    public Bishop(Color color) {
-        super(color);
+    protected Bishop(Color color) {
+        super(color, PieceType.BISHOP);
         this.value = 3;
         this.moveDirections = Direction.getOrdinal();
     }

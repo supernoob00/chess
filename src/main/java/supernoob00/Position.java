@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Position {
+    public final static int LOWER_START_INDEX = 97;
+
     public final static Position INVALID_POSITION = new Position(-1, -1);
 
-    private final static int ROW_COUNT = 8;
-    private final static int COL_COUNT = 8;
-    private final static List<Position> POSITIONS;
+    public final static int ROW_COUNT = 8;
+    public final static int COL_COUNT = 8;
+    public final static List<Position> POSITIONS;
 
     static {
         int size = ROW_COUNT * COL_COUNT;
@@ -39,15 +41,14 @@ public class Position {
         return sameSum || sameDifference;
     }
 
-
     private Position(int row, int col) {
         this.row = row;
         this.col = col;
     }
 
     public static Position get(int row, int col) {
-        boolean rowOutOfBounds = row < 0 || col > ROW_COUNT;
-        boolean colOutOfBounds = col < 0 || col > COL_COUNT;
+        boolean rowOutOfBounds = row < 0 || row > ROW_COUNT - 1;
+        boolean colOutOfBounds = col < 0 || col > COL_COUNT - 1;
         if (rowOutOfBounds || colOutOfBounds) {
             return INVALID_POSITION;
         }
@@ -56,8 +57,10 @@ public class Position {
     }
 
     public static Position get(String coord) {
-        // Code here
-        return Position.get(0,0);
+        char[] charArray = coord.toCharArray();
+        int row = ROW_COUNT - charArray[1];
+        int col = ((int) charArray[0]) - LOWER_START_INDEX;
+        return Position.get(row, col);
     }
 
     public boolean validMove(int rowShift, int colShift) {
@@ -70,15 +73,29 @@ public class Position {
         return Position.get(this.row + dx, this.col + dy);
     }
 
+    // TODO : fix this
     public Position move(Direction dir, int count) {
-        Position dest = switch (dir) {
-            case UP -> up(count);
-            case DOWN -> down(count);
-            case RIGHT -> right(count);
-            case LEFT -> left(count);
-            default -> this;
+        switch (dir) {
+            case UP:
+                return this.up(count);
+            case DOWN:
+                return this.down(count);
+            case RIGHT:
+                return this.right(count);
+            case LEFT:
+                return this.left(count);
+            case UP_LEFT:
+                return this.up(count).left(count);
+            case UP_RIGHT:
+                return this.up(count).right(count);
+            case DOWN_LEFT:
+                return this.down(count).left(count);
+            case DOWN_RIGHT:
+                return this.down(count).right(count);
+            case OTHER:
+                throw new IllegalArgumentException();
         };
-        return dest;
+        return INVALID_POSITION;
     }
 
     public Position move(Direction dir) {
@@ -89,32 +106,16 @@ public class Position {
         return move(-count, 0);
     }
 
-    public Position up() {
-        return up(1);
-    }
-
     public Position left(int count) {
         return move(0, -count);
-    }
-
-    public Position left() {
-        return left(1);
     }
 
     public Position down(int count) {
         return move(count, 0);
     }
 
-    public Position down() {
-        return down(1);
-    }
-
     public Position right(int count) {
         return move(0, count);
-    }
-
-    public Position right() {
-        return right(1);
     }
 
     public boolean hasNext(Direction dir, int dist) {
@@ -139,44 +140,44 @@ public class Position {
         return Math.abs(pos.col - this.col);
     }
 
-    // TODO : clean this up
     public Direction directionOf(Position pos) {
+        Direction direction = null;
         if (this == pos) {
             throw new IllegalArgumentException(
                     "Position argument cannot be same as 'this'.");
         }
-        if (Position.sameRow(this, pos)) {
+        else if (Position.sameRow(this, pos)) {
             boolean toRight = pos.col - this.col > 0;
-            return toRight ? Direction.RIGHT : Direction.LEFT;
+            direction = toRight ? Direction.RIGHT : Direction.LEFT;
         }
         else if (Position.sameCol(this, pos)) {
             boolean toDown = pos.row - this.row > 0;
-            return toDown ? Direction.DOWN : Direction.UP;
+            direction = toDown ? Direction.DOWN : Direction.UP;
         }
         else if (Position.sameDiag(this, pos)) {
-            Direction diagDir = null;
-            boolean toUpRight = pos.row < this.row && pos.col > this.col;
-            if (toUpRight) {
-                diagDir = Direction.UP_RIGHT;
+            if (pos.row < this.row && pos.col > this.col) {
+                direction = Direction.UP_RIGHT;
             }
-            boolean toDownLeft = pos.row > this.row && pos.col < this.col;
-            if (toDownLeft) {
-                diagDir = Direction.DOWN_LEFT;
+            else if (pos.row > this.row && pos.col < this.col) {
+                direction = Direction.DOWN_LEFT;
             }
-            boolean toUpLeft = pos.row < this.row && pos.col < this.col;
-            if (toUpLeft) {
-                diagDir = Direction.UP_LEFT;
+            if (pos.row < this.row && pos.col < this.col) {
+                direction = Direction.UP_LEFT;
             }
-            boolean toDownRight = pos.row > this.row && pos.col > this.col;
-            if (toDownRight) {
-                diagDir = Direction.DOWN_RIGHT;
+            if (pos.row > this.row && pos.col > this.col) {
+                direction = Direction.DOWN_RIGHT;
             }
-            return diagDir;
         }
-        return Direction.OTHER;
+        else {
+            direction = Direction.OTHER;
+        }
+        return direction;
     }
 
     public String toString() {
-        return this.row + " " + this.col;
+        String rowVal = Integer.toString(ROW_COUNT - this.row);
+        String colVal = Character.toString(
+                (char) (LOWER_START_INDEX + this.col));
+        return colVal + rowVal;
     }
 }

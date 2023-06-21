@@ -4,42 +4,23 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class King extends Piece {
-    public static boolean inCheck(Color color, Board board) {
-        Position kingPos = board.getKingPosition(color);
-        Color enemyColor = color.opposite();
-        for (Position pos : board.getPiecePositions(enemyColor)) {
-            Piece enemyPiece = board.getPiece(pos);
-            if (enemyPiece.threatens(pos, kingPos, board)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    public final static King WHITE_KING = new King(Color.WHITE);
+    public final static King BLACK_KING = new King(Color.BLACK);
 
-    public static boolean inCheckmate(Color color, Board board) {
-        Position kingPos = board.getKingPosition(color);
-        Piece king = board.getPiece(kingPos);
-        Set<Board> legalMoves = king.getLegalMoves(kingPos, board);
-        return (King.inCheck(color, board)) && (legalMoves.size() == 0);
-    }
-
-    public static boolean inStalemate(Color color, Board board) {
-        Position kingPos = board.getKingPosition(color);
-        Piece king = board.getPiece(kingPos);
-        Set<Board> legalMoves = king.getLegalMoves(kingPos, board);
-        return !(King.inCheck(color, board)) && (legalMoves.size() == 0);
+    public static King getInstance(Color color) {
+        return color == Color.WHITE ? WHITE_KING : BLACK_KING;
     }
 
     private final Set<Direction> moveDirections;
 
-    public King(Color color) {
-        super(color);
+    protected King(Color color) {
+        super(color, PieceType.KING);
         this.moveDirections = Direction.getAll();
     }
 
     @Override
-    public Set<Board> pseudoLegalMoves(Position start, Board board) {
-        Set<Board> testBoards = new HashSet<Board>();
+    public Set<Move> pseudoLegalMoves(Position start, Board board) {
+        Set<Move> moves = new HashSet<Move>();
         for (Direction dir : this.moveDirections) {
             if (!start.hasNext(dir)) {
                 continue;
@@ -52,12 +33,10 @@ public class King extends Piece {
                 continue;
             }
 
-            Board testBoard = new Board(board);
-            board.removePiece(start);
-            board.setPiece(next, this);
-            testBoards.add(testBoard);
+            Move move = new Move(start, next);
+            moves.add(move);
         }
-        return testBoards;
+        return moves;
     }
 
     @Override
@@ -66,5 +45,31 @@ public class King extends Piece {
         boolean withinDistance = start.rowDistance(threatened) <= 1
                 && start.colDistance(threatened) <= 1;
         return !friendly(threatenedPiece) && withinDistance;
+    }
+
+    public boolean inCheck(Position myPos, Board board) {
+        Color enemyColor = this.color.opposite();
+        for (Position enemyPos : board.getPiecePositions(enemyColor)) {
+            Piece enemyPiece = board.getPiece(enemyPos);
+            if (enemyPiece.threatens(enemyPos, myPos, board)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean inCheckmate(Position myPos, Board board) {
+        Set<Move> legalMoves = getLegalMoves(myPos, board);
+        return inCheck(myPos, board) && (legalMoves.size() == 0);
+    }
+
+    public boolean inStalemate(Position myPos, Board board) {
+        Set<Move> legalMoves = getLegalMoves(myPos, board);
+        return (!inCheck(myPos, board)) && (legalMoves.size() == 0);
+    }
+
+    @Override
+    public String toString() {
+        return this.color == Color.WHITE ? "K" : "k";
     }
 }

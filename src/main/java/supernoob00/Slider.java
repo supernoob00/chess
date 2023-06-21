@@ -5,38 +5,40 @@ import java.util.*;
 public abstract class Slider extends Piece {
     protected Set<Direction> moveDirections;
 
-    protected Slider(Color color) {
-        super(color);
+    protected Slider(Color color, PieceType type) {
+        super(color, type);
     }
 
     @Override
-    public Set<Board> pseudoLegalMoves(Position start, Board board) {
-        Set<Board> moves = new HashSet<Board>();
+    public Set<Move> pseudoLegalMoves(Position start, Board board) {
+        Set<Move> moves = new HashSet<Move>();
         for (Direction dir : this.moveDirections) {
-            Set<Board> dirMoves = directionalMoves(start, dir, board);
+            Set<Move> dirMoves = directionalMoves(start, dir, board);
             moves.addAll(dirMoves);
         }
         return moves;
     }
 
-    // moves in a given direction
-    protected Set<Board> directionalMoves(Position start, Direction dir, Board board) {
-        Set<Board> moves = new HashSet<Board>();
-        Position current = start;
-        while (current.hasNext(dir)) {
-            Position next = current.move(dir);
-            Piece nextPiece = board.getPiece(next);
+    // TODO: clean up logic
+    protected Set<Move> directionalMoves(
+            Position start, Direction dir, Board board) {
 
-            if (friendly(nextPiece)) {
+        Position current = start;
+        Set<Move> moves = new HashSet<Move>();
+        while (current.hasNext(dir)) {
+            current = current.move(dir);
+            Piece currentPiece = board.getPiece(current);
+
+            if (friendly(currentPiece)) {
                 break;
             }
 
-            Board testBoard = new Board(board);
-            testBoard.removePiece(start);
-            testBoard.setPiece(next, this);
+            Move move = new Move(start, current);
+            moves.add(move);
 
-            moves.add(testBoard);
-            current = next;
+            if (enemy(currentPiece)) {
+                break;
+            }
         }
         return moves;
     }
@@ -45,16 +47,8 @@ public abstract class Slider extends Piece {
     public boolean threatens(Position start, Position threatened, Board board) {
         Direction dir = start.directionOf(threatened);
         Piece threatenedPiece = board.getPiece(threatened);
-        if (!this.moveDirections.contains(dir) || friendly(threatenedPiece)) {
-            return false;
-        }
-        Position current = start.move(dir);
-        while (current != threatened) {
-            if (board.getPiece(current) != null) {
-                return false;
-            }
-            current = current.move(dir);
-        }
-        return true;
+        return enemy(threatenedPiece)
+                && this.moveDirections.contains(dir)
+                && board.hasLineOfSight(start, threatened, dir);
     }
 }

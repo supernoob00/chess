@@ -6,10 +6,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Knight extends Piece implements Valued {
+    public final static Knight WHITE_KNIGHT = new Knight(Color.WHITE);
+    public final static Knight BLACK_KNIGHT = new Knight(Color.BLACK);
+
+    public static Knight getInstance(Color color) {
+        return color == Color.WHITE ? WHITE_KNIGHT : BLACK_KNIGHT;
+    }
+
     private final int value;
 
-    public Knight(Color color) {
-        super(color);
+    protected Knight(Color color) {
+        super(color, PieceType.KNIGHT);
         this.value = 3;
     }
 
@@ -19,31 +26,24 @@ public class Knight extends Piece implements Valued {
     }
 
     @Override
-    public Set<Board> pseudoLegalMoves(Position start, Board board) {
-        Set<Position> positions = new HashSet<Position>();
+    public Set<Move> pseudoLegalMoves(Position start, Board board) {
+        Set<Move> moves = new HashSet<Move>();
         Set<Direction> vertical = Set.of(Direction.UP, Direction.DOWN);
         Set<Direction> horizontal = Set.of(Direction.LEFT, Direction.RIGHT);
         for (Direction vDir : vertical) {
             for (Direction hDir : horizontal) {
                 Position firstDest = start.move(vDir, 2).move(hDir, 1);
                 Position secondDest = start.move(hDir, 2).move(vDir, 1);
-                positions.add(firstDest);
-                positions.add(secondDest);
+
+                if (firstDest != Position.INVALID_POSITION) {
+                    moves.add(new Move(start, firstDest));
+                }
+                if (secondDest != Position.INVALID_POSITION) {
+                    moves.add(new Move(start, secondDest));
+                }
             }
         }
-        positions = positions.stream()
-                .filter(p -> p != Position.INVALID_POSITION)
-                .collect(Collectors.toSet());
-
-        Set<Board> testBoards = new HashSet<Board>();
-
-        for (Position dest : positions) {
-            Board testBoard = new Board(board);
-            testBoard.removePiece(start);
-            testBoard.setPiece(dest, this);
-            testBoards.add(testBoard);
-        }
-        return testBoards;
+        return moves;
     }
 
     @Override
@@ -53,5 +53,10 @@ public class Knight extends Piece implements Valued {
         int colDist = start.colDistance(threatened);
         return ((rowDist == 2 && colDist == 1) || (colDist == 2 && rowDist == 1))
                 && !friendly(piece);
+    }
+
+    @Override
+    public String toString() {
+        return this.color == Color.WHITE ? "N" : "n";
     }
 }

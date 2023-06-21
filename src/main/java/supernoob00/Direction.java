@@ -11,8 +11,7 @@ public enum Direction {
     UP_RIGHT(),
     DOWN_LEFT(),
     DOWN_RIGHT(),
-    // not one of the eight standard directions
-    OTHER();
+    OTHER(); // not one of the eight standard directions
 
     private static void setOppositeHelper(Direction dir1, Direction dir2) {
         dir1.opposite = dir2;
@@ -51,7 +50,11 @@ public enum Direction {
         return Set.of(UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT);
     }
 
-    public Direction opposite() {
+    public Direction getOpposite() {
         return this.opposite;
+    }
+
+    public boolean isParallel(Direction dir) {
+        return (dir == this) || (dir.opposite == this);
     }
 }
