@@ -26,9 +26,9 @@ public abstract class Piece extends BoardObject implements Movable {
                 .filter(move -> {
                     Piece taken = board.getPiece(move.getEnd());
                     board.applyMove(move);
-                    boolean illegal = myKing.inCheck(myKingPos, board);
+                    boolean legal = !myKing.inCheck(myKingPos, board);
                     board.revertMove(move, taken);
-                    return illegal;
+                    return legal;
                 })
                 .collect(Collectors.toSet());
         return legalMoves;

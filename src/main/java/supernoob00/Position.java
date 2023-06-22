@@ -46,6 +46,14 @@ public class Position {
         this.col = col;
     }
 
+    public int getRowPositions() {
+        return this.row;
+    }
+
+    public int getCol() {
+        return this.col;
+    }
+
     public static Position get(int row, int col) {
         boolean rowOutOfBounds = row < 0 || row > ROW_COUNT - 1;
         boolean colOutOfBounds = col < 0 || col > COL_COUNT - 1;
@@ -67,6 +75,12 @@ public class Position {
         boolean validRow = this.row + rowShift <= ROW_COUNT;
         boolean validCol = this.col + colShift <= COL_COUNT;
         return validRow && validCol;
+    }
+
+    public static List<Position> getRowPositions(int row) {
+        int startIndex = COL_COUNT * row;
+        int endIndex = startIndex + COL_COUNT;
+        return POSITIONS.subList(startIndex, endIndex);
     }
 
     public Position move(int dx, int dy) {

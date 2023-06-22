@@ -59,7 +59,7 @@ public class Pawn extends Piece implements Valued {
         Position current = start;
 
         while (current.hasNext(moveDir)
-                && start.rowDistance(current) <= 2) {
+                && start.rowDistance(current) < 2) {
             Position next = current.move(moveDir);
             Piece nextPiece = board.getPiece(next);
 

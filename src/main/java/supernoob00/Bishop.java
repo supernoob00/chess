@@ -4,7 +4,7 @@ public class Bishop extends Slider implements Valued {
     public final static Bishop WHITE_BISHOP = new Bishop(Color.WHITE);
     public final static Bishop BLACK_BISHOP = new Bishop(Color.BLACK);
 
-    public Bishop getInstance(Color color) {
+    public static Bishop getInstance(Color color) {
         return color == Color.WHITE ? WHITE_BISHOP : BLACK_BISHOP;
     }
 
@@ -19,5 +19,10 @@ public class Bishop extends Slider implements Valued {
     @Override
     public int getValue() {
         return this.value;
+    }
+
+    @Override
+    public String toString() {
+        return this.color == Color.WHITE ? "B" : "b";
     }
 }

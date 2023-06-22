@@ -1,9 +1,7 @@
 package supernoob00;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class Board {
@@ -18,6 +16,44 @@ public class Board {
     // copy constructor for Board class
     public Board(Board other) {
         this.board = new HashMap<Position, BoardObject>(other.board);
+    }
+
+    private static void setBoardRow(Board board, int row, List<Piece> pieces) {
+        Position.getRowPositions(7).forEach(
+                pos -> board.setPiece(pos, pieces.get(pos.getCol())));
+    }
+
+
+    public void setup() {
+        BiConsumer<Integer, List<Piece>> setBoardRow = new BiConsumer<>() {
+            @Override
+            public void accept(Integer row, List<Piece> pieces) {
+                Position.getRowPositions(row).forEach(
+                        pos -> Board.this.setPiece(pos, pieces.get(pos.getCol())));
+            }
+        };
+
+        for (Color color : Color.values()) {
+            List<Piece> backRow = List.of(
+                    CastleRook.getInstance(color),
+                    Knight.getInstance(color),
+                    Bishop.getInstance(color),
+                    Queen.getInstance(color),
+                    CastleKing.getInstance(color),
+                    Bishop.getInstance(color),
+                    Knight.getInstance(color),
+                    CastleRook.getInstance(color));
+            List<Piece> pawnRow = Collections.nCopies(8, Pawn.getInstance(color));
+
+            if (color == Color.WHITE) {
+                setBoardRow.accept(7, backRow);
+                setBoardRow.accept(6, pawnRow);
+            }
+            else {
+                setBoardRow.accept(0, backRow);
+                setBoardRow.accept(1, pawnRow);
+            }
+        }
     }
 
     public void applyMove(Move move) {
@@ -110,7 +146,7 @@ public class Board {
 
     public Position getPosition(Piece piece) {
         return this.board.keySet().stream()
-                .filter(pos -> getPiece(pos) == piece)
+                .filter(pos -> getPiece(pos).equals(piece))
                 .findFirst()
                 .orElse(null);
     }

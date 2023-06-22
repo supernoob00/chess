@@ -35,10 +35,10 @@ public class Knight extends Piece implements Valued {
                 Position firstDest = start.move(vDir, 2).move(hDir, 1);
                 Position secondDest = start.move(hDir, 2).move(vDir, 1);
 
-                if (firstDest != Position.INVALID_POSITION) {
+                if (firstDest != Position.INVALID_POSITION && !friendly(board.getPiece(firstDest))) {
                     moves.add(new Move(start, firstDest));
                 }
-                if (secondDest != Position.INVALID_POSITION) {
+                if (secondDest != Position.INVALID_POSITION && !friendly(board.getPiece(secondDest))) {
                     moves.add(new Move(start, secondDest));
                 }
             }
