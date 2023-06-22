@@ -1,6 +1,7 @@
 package supernoob00;
 
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 public enum Direction {
     UP(),
@@ -12,18 +13,17 @@ public enum Direction {
     DOWN_LEFT(),
     DOWN_RIGHT(),
     OTHER(); // not one of the eight standard directions
-
-    private static void setOppositeHelper(Direction dir1, Direction dir2) {
-        dir1.opposite = dir2;
-        dir2.opposite = dir1;
-    }
-
     // set opposite directions
+
     static {
-        setOppositeHelper(UP, DOWN);
-        setOppositeHelper(LEFT, RIGHT);
-        setOppositeHelper(UP_LEFT, DOWN_RIGHT);
-        setOppositeHelper(UP_RIGHT, DOWN_LEFT);
+        BiConsumer<Direction, Direction> setOpposite = (Direction d, Direction d2) -> {
+            d.opposite = d2;
+            d2.opposite = d;
+        };
+        setOpposite.accept(UP, DOWN);
+        setOpposite.accept(LEFT, RIGHT);
+        setOpposite.accept(UP_LEFT, DOWN_RIGHT);
+        setOpposite.accept(UP_RIGHT, DOWN_LEFT);
         OTHER.opposite = OTHER;
     }
 

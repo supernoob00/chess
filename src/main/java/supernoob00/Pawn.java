@@ -13,6 +13,7 @@ public class Pawn extends Piece implements Valued {
     private int value;
     private Direction moveDirection;
     private Set<Direction> takeDirections;
+    private int startRow;
 
     protected Pawn(Color color) {
         super(color, PieceType.PAWN);
@@ -20,9 +21,11 @@ public class Pawn extends Piece implements Valued {
         if (color == Color.WHITE) {
             moveDirection = Direction.UP;
             takeDirections = Set.of(Direction.UP_LEFT, Direction.UP_RIGHT);
+            startRow = 6;
         } else if (color == Color.BLACK) {
             moveDirection = Direction.DOWN;
             takeDirections = Set.of(Direction.DOWN_LEFT, Direction.DOWN_RIGHT);
+            startRow = 1;
         }
     }
 
@@ -58,8 +61,10 @@ public class Pawn extends Piece implements Valued {
         Direction moveDir = this.moveDirection;
         Position current = start;
 
+        int allowed = (start.getRow() == this.startRow) ? 2 : 1;
+
         while (current.hasNext(moveDir)
-                && start.rowDistance(current) < 2) {
+                && start.rowDistance(current) < allowed) {
             Position next = current.move(moveDir);
             Piece nextPiece = board.getPiece(next);
 

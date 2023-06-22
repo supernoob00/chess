@@ -46,7 +46,7 @@ public class Position {
         this.col = col;
     }
 
-    public int getRowPositions() {
+    public int getRow() {
         return this.row;
     }
 
@@ -66,7 +66,7 @@ public class Position {
 
     public static Position get(String coord) {
         char[] charArray = coord.toCharArray();
-        int row = ROW_COUNT - charArray[1];
+        int row = ROW_COUNT - Character.getNumericValue(charArray[1]);
         int col = ((int) charArray[0]) - LOWER_START_INDEX;
         return Position.get(row, col);
     }
