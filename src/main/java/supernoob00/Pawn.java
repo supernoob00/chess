@@ -34,6 +34,10 @@ public class Pawn extends Piece implements Valued {
         return this.value;
     }
 
+    public Direction getMoveDirection() {
+        return this.moveDirection;
+    }
+
     @Override
     public Set<Move> pseudoLegalMoves(Position start, Board board) {
         Set<Move> moves = new HashSet<Move>();
@@ -106,7 +110,7 @@ public class Pawn extends Piece implements Valued {
             PawnTrail trail = board.getPawnTrail(next);
             if (enemy(trail)) {
                 Position takenPawnPos = next.move(this.moveDirection.getOpposite());
-                Move move = new Move(start, next, Move.Special.EN_PASSANT);
+                Move move = new Move(start, next, Move.EN_PASSANT);
                 moves.add(move);
             }
         }

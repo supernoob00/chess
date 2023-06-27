@@ -1,16 +1,59 @@
 package supernoob00;
 
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class Board {
-    public final static int SQUARE_COUNT = Position.ROW_COUNT * Position.COL_COUNT; // 64
+    public final static Board DEFAULT_BOARD = new Board();
 
-    private Map<Position, BoardObject> board;
+    private static List<Piece> getBackRow(Color color) {
+        return List.of(
+            CastleRook.getInstance(color),
+            Knight.getInstance(color),
+            Bishop.get(color),
+            Queen.getInstance(color),
+            CastleKing.getInstance(color),
+            Bishop.get(color),
+            Knight.getInstance(color),
+            CastleRook.getInstance(color)
+        );
+    }
+    private static List<Piece> getFrontRow(Color color) {
+        return Collections.nCopies(Position.SIDE_COUNT, Pawn.getInstance(color));
+    }
+
+    static {
+        List<Piece> whiteBackRow = getBackRow(Color.WHITE);
+        List<Piece> whiteFrontRow = getFrontRow(Color.WHITE);
+        List<Piece> blackBackRow = getBackRow(Color.BLACK);
+        List<Piece> blackFrontRow = getBackRow(Color.BLACK);
+
+        for (int i = 0; i < Position.SIDE_COUNT; i++) {
+            DEFAULT_BOARD.setPiece(Position.get(7, i), whiteBackRow.get(i));
+        }
+        for (int i = 0; i < Position.SIDE_COUNT; i++) {
+            DEFAULT_BOARD.setPiece(Position.get(6, i), whiteFrontRow.get(i));
+        }
+        for (int i = 0; i < Position.SIDE_COUNT; i++) {
+            DEFAULT_BOARD.setPiece(Position.get(0, i), blackBackRow.get(i));
+        }
+        for (int i = 0; i < Position.SIDE_COUNT; i++) {
+            DEFAULT_BOARD.setPiece(Position.get(1, i), blackFrontRow.get(i));
+        }
+    }
+
+    private final Map<Position, BoardObject> board;
 
     public Board() {
         this.board = new HashMap<Position, BoardObject>();
+    }
+
+    public Board(Map<Position, BoardObject> board) {
+        this.board = new HashMap<Position, BoardObject>(board);
+    }
+
+    public boolean contains(Piece piece) {
+        return this.board.containsValue(piece);
     }
 
     // copy constructor for Board class
@@ -23,42 +66,38 @@ public class Board {
                 pos -> board.setPiece(pos, pieces.get(pos.getCol())));
     }
 
+    public void applyMove(Move move) {
+        Position start = move.getStart();
+        Position end = move.getEnd();
 
-    public void setup() {
-        BiConsumer<Integer, List<Piece>> setBoardRow = new BiConsumer<>() {
-            @Override
-            public void accept(Integer row, List<Piece> pieces) {
-                Position.getRowPositions(row).forEach(
-                        pos -> Board.this.setPiece(pos, pieces.get(pos.getCol())));
-            }
-        };
+        if (move.isEnPassant()) {
+            Pawn movedPawn = (Pawn) removePiece(start);
+            setPiece(end, movedPawn);
+            Direction pawnMoveDir = movedPawn.getMoveDirection();
+            Direction opposite = pawnMoveDir.getOpposite();
+            removePiece(end.move(opposite));
+        }
+        else if (move.isCastle()) {
+            Piece movedKing = removePiece(start);
+            Color kingColor = movedKing.getColor();
+            Piece movedRook;
+            Position rookEnd;
 
-        for (Color color : Color.values()) {
-            List<Piece> backRow = List.of(
-                    CastleRook.getInstance(color),
-                    Knight.getInstance(color),
-                    Bishop.getInstance(color),
-                    Queen.getInstance(color),
-                    CastleKing.getInstance(color),
-                    Bishop.getInstance(color),
-                    Knight.getInstance(color),
-                    CastleRook.getInstance(color));
-            List<Piece> pawnRow = Collections.nCopies(8, Pawn.getInstance(color));
-
-            if (color == Color.WHITE) {
-                setBoardRow.accept(7, backRow);
-                setBoardRow.accept(6, pawnRow);
+            if (move.isQueensideCastle()) {
+                movedRook = removePiece(CastleRook.getQueensideStart(kingColor));
+                rookEnd = end.move(Direction.RIGHT);
             }
             else {
-                setBoardRow.accept(0, backRow);
-                setBoardRow.accept(1, pawnRow);
+                movedRook = removePiece(CastleRook.getKingsideStart(kingColor));
+                rookEnd = end.move(Direction.LEFT);
             }
+            setPiece(end, movedKing);
+            setPiece(rookEnd, movedRook);
         }
-    }
-
-    public void applyMove(Move move) {
-        Piece piece = removePiece(move.getStart());
-        setPiece(move.getEnd(), piece);
+        else {
+            Piece piece = removePiece(start);
+            setPiece(move.getEnd(), piece);
+        }
     }
 
     public void revertMove(Move move, Piece taken) {
@@ -73,6 +112,13 @@ public class Board {
         BoardObject piece = this.board.get(pos);
         // excludes PawnTrails
         return (piece instanceof Piece) ? (Piece) piece : null;
+    }
+
+    public Position getPosition(BoardObject o) {
+        return this.board.keySet().stream()
+                .filter(pos -> this.board.get(pos) == o)
+                .findFirst()
+                .orElse(null);
     }
 
     public void setPiece(Position pos, BoardObject piece) {
@@ -99,16 +145,21 @@ public class Board {
 
     public boolean clearPawnTrails() {
         boolean changes = false;
-        for (Position pos : this.board.keySet()) {
-            if (this.board.get(pos) instanceof PawnTrail) {
-                changes = true;
-                this.board.remove(pos);
+        Iterator<Position> iter = this.board.keySet().iterator();
+        while (iter.hasNext()) {
+            PawnTrail trail = getPawnTrail(iter.next());
+            if (trail != null) {
+                iter.remove();
             }
         }
         return changes;
     }
 
-    public boolean hasLineOfSight(Position pos1, Position pos2, Direction dir) {
+    public boolean hasLineOfSight(Position pos1, Position pos2) {
+        Direction dir = pos1.directionOf(pos2);
+        if (dir == Direction.OTHER) {
+            return false;
+        }
         Position current = pos1;
         while (current.hasNext(dir) && current != pos2) {
             if (getPiece(current) != null) {
@@ -116,7 +167,7 @@ public class Board {
             }
             current = current.move(dir);
         }
-        return current == pos2;
+        return true;
     }
 
     public Set<Position> getThreats(Position pos, Color enemyColor) {
@@ -129,12 +180,11 @@ public class Board {
                 .collect(Collectors.toSet());
     }
 
-    public List<BoardObject> removePieces(Position... lop) {
-        List<BoardObject> pieces = new ArrayList<BoardObject>();
-        for (Position pos : lop) {
-            pieces.add(removePiece(pos));
-        }
-        return pieces;
+    public Position getPosition(Piece piece) {
+        return this.board.keySet().stream()
+                .filter(pos -> getPiece(pos).equals(piece))
+                .findFirst()
+                .orElse(null);
     }
 
     public Set<Position> getPiecePositions(Color color) {
@@ -144,18 +194,14 @@ public class Board {
                 .collect(Collectors.toSet());
     }
 
-    public Position getPosition(Piece piece) {
-        return this.board.keySet().stream()
-                .filter(pos -> getPiece(pos).equals(piece))
-                .findFirst()
-                .orElse(null);
-    }
-
-    public Position getPosition(PieceType type, Color color) {
-        return this.board.keySet().stream()
-                .filter(pos -> getPiece(pos).equals(type, color))
-                .findFirst()
-                .orElse(null);
+    public boolean isSafe(Position pos, Color enemyColor) {
+        for (Position p : getPiecePositions(enemyColor)) {
+            Piece enemyPiece = getPiece(p);
+            if (enemyPiece.threatens(p, pos, this)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -163,28 +209,19 @@ public class Board {
         StringBuilder board = new StringBuilder();
         int i = 1;
         for (Position pos : Position.POSITIONS) {
-                Piece piece = getPiece(pos);
-                String icon;
-                icon = (piece == null) ? "*" : piece.toString();
-                board.append(icon);
+            Piece piece = getPiece(pos);
+            String icon;
+            icon = (piece == null) ? "*" : piece.toString();
+            board.append(icon);
 
-                if (i > 1 && i % 8 == 0) {
-                    board.append("\n");
-                }
-                i++;
+            if (i > 1 && i % 8 == 0) {
+                board.append("\n");
+            }
+            i++;
         }
         return board.toString();
     }
 
-    public boolean isThreatened(Position pos, Color enemyColor) {
-        for (Position p : getPiecePositions(enemyColor)) {
-            Piece enemyPiece = getPiece(p);
-            if (enemyPiece.threatens(p, pos, this)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     @Override
     public boolean equals(Object o) {

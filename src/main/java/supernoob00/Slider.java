@@ -49,6 +49,6 @@ public abstract class Slider extends Piece {
         Piece threatenedPiece = board.getPiece(threatened);
         return enemy(threatenedPiece)
                 && this.moveDirections.contains(dir)
-                && board.hasLineOfSight(start, threatened, dir);
+                && board.hasLineOfSight(start, threatened);
     }
 }

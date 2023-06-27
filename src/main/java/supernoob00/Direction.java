@@ -13,8 +13,8 @@ public enum Direction {
     DOWN_LEFT(),
     DOWN_RIGHT(),
     OTHER(); // not one of the eight standard directions
-    // set opposite directions
 
+    // set opposite directions
     static {
         BiConsumer<Direction, Direction> setOpposite = (Direction d, Direction d2) -> {
             d.opposite = d2;

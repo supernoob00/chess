@@ -2,10 +2,9 @@ package supernoob00;
 
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public abstract class Piece extends BoardObject implements Movable {
+public abstract class Piece extends BoardObject {
     protected PieceType type;
 
     public Piece(Color color, PieceType type) {
@@ -17,7 +16,6 @@ public abstract class Piece extends BoardObject implements Movable {
         return this.type;
     }
 
-    @Override
     public Set<Move> getLegalMoves(Position start, Board board) {
         King myKing = King.getInstance(this.color);
         Position myKingPos = board.getPosition(myKing);
@@ -34,11 +32,9 @@ public abstract class Piece extends BoardObject implements Movable {
         return legalMoves;
     }
 
-    @Override
-    public boolean canMove(Move move, Board board) {
-        Set<Move> legalMoves = getLegalMoves(move.getStart(), board);
-        return legalMoves.contains(move);
-    }
+    protected abstract Set<Move> pseudoLegalMoves(Position start, Board board);
+
+    public abstract boolean threatens(Position start, Position threatened, Board board);
 
     public boolean friendly(BoardObject obj) {
         return (obj != null) && (obj.getColor() == this.color);
@@ -54,10 +50,6 @@ public abstract class Piece extends BoardObject implements Movable {
         if (!(o instanceof Piece)) return false;
         Piece piece = (Piece) o;
         return type == piece.type && color == piece.color;
-    }
-
-    public boolean equals(PieceType type, Color color) {
-        return this.type == type && this.color == color;
     }
 
     @Override

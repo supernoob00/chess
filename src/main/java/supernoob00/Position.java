@@ -1,31 +1,25 @@
 package supernoob00;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Position {
-    public final static int LOWER_START_INDEX = 97;
+    public final static int SIDE_COUNT = 8;
+    public final static int LOWERCASE_START_ASCII = 97;
 
-    public final static Position INVALID_POSITION = new Position(-1, -1);
-
-    public final static int ROW_COUNT = 8;
-    public final static int COL_COUNT = 8;
-    public final static List<Position> POSITIONS;
-
+    public final static List<Position> POSITIONS = Arrays.asList(new Position[64]);
     static {
-        int size = ROW_COUNT * COL_COUNT;
-        POSITIONS = new ArrayList<Position>(size);
+        int size = SIDE_COUNT * SIDE_COUNT;
 
-        for (int row = 0; row < ROW_COUNT; row++) {
-            for (int col = 0; col < COL_COUNT; col++) {
+        for (int row = 0; row < SIDE_COUNT; row++) {
+            for (int col = 0; col < SIDE_COUNT; col++) {
                 Position pos = new Position(row, col);
-                POSITIONS.add(pos);
+                POSITIONS.set(SIDE_COUNT * row + col, pos);
             }
         }
     }
 
-    private final int row;
-    private final int col;
+    public final static Position INVALID_POSITION = new Position(-1, -1);
 
     public static boolean sameRow(Position pos1, Position pos2) {
         return pos1.row == pos2.row;
@@ -41,6 +35,26 @@ public class Position {
         return sameSum || sameDifference;
     }
 
+    public static Position get(int row, int col) {
+        boolean rowOutOfBounds = row < 0 || row > SIDE_COUNT - 1;
+        boolean colOutOfBounds = col < 0 || col > SIDE_COUNT - 1;
+        if (rowOutOfBounds || colOutOfBounds) {
+            return INVALID_POSITION;
+        }
+        int index = SIDE_COUNT * row + col;
+        return POSITIONS.get(index);
+    }
+
+    public static Position get(String coord) {
+        char[] charArray = coord.toCharArray();
+        int row = SIDE_COUNT - Character.getNumericValue(charArray[1]);
+        int col = ((int) charArray[0]) - LOWERCASE_START_ASCII;
+        return Position.get(row, col);
+    }
+
+    private final int row;
+    private final int col;
+
     private Position(int row, int col) {
         this.row = row;
         this.col = col;
@@ -54,62 +68,34 @@ public class Position {
         return this.col;
     }
 
-    public static Position get(int row, int col) {
-        boolean rowOutOfBounds = row < 0 || row > ROW_COUNT - 1;
-        boolean colOutOfBounds = col < 0 || col > COL_COUNT - 1;
-        if (rowOutOfBounds || colOutOfBounds) {
-            return INVALID_POSITION;
-        }
-        int index = ROW_COUNT * row + col;
-        return POSITIONS.get(index);
-    }
-
-    public static Position get(String coord) {
-        char[] charArray = coord.toCharArray();
-        int row = ROW_COUNT - Character.getNumericValue(charArray[1]);
-        int col = ((int) charArray[0]) - LOWER_START_INDEX;
-        return Position.get(row, col);
-    }
-
     public boolean validMove(int rowShift, int colShift) {
-        boolean validRow = this.row + rowShift <= ROW_COUNT;
-        boolean validCol = this.col + colShift <= COL_COUNT;
+        boolean validRow = this.row + rowShift <= SIDE_COUNT;
+        boolean validCol = this.col + colShift <= SIDE_COUNT;
         return validRow && validCol;
     }
 
     public static List<Position> getRowPositions(int row) {
-        int startIndex = COL_COUNT * row;
-        int endIndex = startIndex + COL_COUNT;
-        return POSITIONS.subList(startIndex, endIndex);
+        int start = SIDE_COUNT * row;
+        int end = start + SIDE_COUNT;
+        return POSITIONS.subList(start, end);
     }
 
     public Position move(int dx, int dy) {
         return Position.get(this.row + dx, this.col + dy);
     }
 
-    // TODO : fix this
     public Position move(Direction dir, int count) {
-        switch (dir) {
-            case UP:
-                return this.up(count);
-            case DOWN:
-                return this.down(count);
-            case RIGHT:
-                return this.right(count);
-            case LEFT:
-                return this.left(count);
-            case UP_LEFT:
-                return this.up(count).left(count);
-            case UP_RIGHT:
-                return this.up(count).right(count);
-            case DOWN_LEFT:
-                return this.down(count).left(count);
-            case DOWN_RIGHT:
-                return this.down(count).right(count);
-            case OTHER:
-                throw new IllegalArgumentException();
+        return switch (dir) {
+            case UP -> this.up(count);
+            case DOWN -> this.down(count);
+            case RIGHT -> this.right(count);
+            case LEFT -> this.left(count);
+            case UP_LEFT -> this.up(count).left(count);
+            case UP_RIGHT -> this.up(count).right(count);
+            case DOWN_LEFT -> this.down(count).left(count);
+            case DOWN_RIGHT -> this.down(count).right(count);
+            case OTHER -> throw new IllegalArgumentException();
         };
-        return INVALID_POSITION;
     }
 
     public Position move(Direction dir) {
@@ -133,17 +119,11 @@ public class Position {
     }
 
     public boolean hasNext(Direction dir, int dist) {
-        if (move(dir, dist) == INVALID_POSITION) {
-            return false;
-        }
-        return true;
+        return move(dir, dist) != INVALID_POSITION;
     }
 
     public boolean hasNext(Direction dir) {
-        if (move(dir) == INVALID_POSITION) {
-            return false;
-        }
-        return true;
+        return move(dir) != INVALID_POSITION;
     }
 
     public int rowDistance(Position pos) {
@@ -189,9 +169,9 @@ public class Position {
     }
 
     public String toString() {
-        String rowVal = Integer.toString(ROW_COUNT - this.row);
+        String rowVal = Integer.toString(SIDE_COUNT - this.row);
         String colVal = Character.toString(
-                (char) (LOWER_START_INDEX + this.col));
+                (char) (LOWERCASE_START_ASCII + this.col));
         return colVal + rowVal;
     }
 }
