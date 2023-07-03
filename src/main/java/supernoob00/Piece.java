@@ -4,11 +4,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public abstract class Piece extends BoardObject {
+public abstract class Piece {
     protected PieceType type;
+    protected Color color;
 
     public Piece(Color color, PieceType type) {
-        super(color);
+        this.color = color;
         this.type = type;
     }
 
@@ -16,32 +17,20 @@ public abstract class Piece extends BoardObject {
         return this.type;
     }
 
-    public Set<Move> getLegalMoves(Position start, Board board) {
-        King myKing = King.getInstance(this.color);
-        Position myKingPos = board.getPosition(myKing);
-        Set<Move> legalMoves = pseudoLegalMoves(start, board)
-                .stream()
-                .filter(move -> {
-                    Piece taken = board.getPiece(move.getEnd());
-                    board.applyMove(move);
-                    boolean legal = !myKing.inCheck(myKingPos, board);
-                    board.revertMove(move, taken);
-                    return legal;
-                })
-                .collect(Collectors.toSet());
-        return legalMoves;
+    public Color getColor() {
+        return this.color;
     }
 
     protected abstract Set<Move> pseudoLegalMoves(Position start, Board board);
 
     public abstract boolean threatens(Position start, Position threatened, Board board);
 
-    public boolean friendly(BoardObject obj) {
-        return (obj != null) && (obj.getColor() == this.color);
+    public boolean friendly(Piece other) {
+        return (other != null) && (other.color == this.color);
     }
 
-    public boolean enemy(BoardObject obj) {
-        return (obj != null) && (obj.getColor() != this.color);
+    public boolean enemy(Piece other) {
+        return (other != null) && (other.color != this.color);
     }
 
     @Override

@@ -10,7 +10,14 @@ public class Pawn extends Piece implements Valued {
         return color == Color.WHITE ? WHITE_PAWN : BLACK_PAWN;
     }
 
-    private int value;
+    public final Set<Piece> PROMOTABLE = Set.of(
+            Bishop.getInstance(this.color),
+            Knight.getInstance(this.color),
+            Rook.getInstance(this.color),
+            Queen.getInstance(this.color)
+    );
+
+    private final int value;
     private Direction moveDirection;
     private Set<Direction> takeDirections;
     private int startRow;
@@ -40,7 +47,7 @@ public class Pawn extends Piece implements Valued {
 
     @Override
     public Set<Move> pseudoLegalMoves(Position start, Board board) {
-        Set<Move> moves = new HashSet<Move>();
+        Set<Move> moves = new HashSet<>();
         moves.addAll(getForwardMoves(start, board));
         moves.addAll(getDiagonalMoves(start, board));
         moves.addAll(getEnPassantMoves(start, board));
@@ -61,7 +68,7 @@ public class Pawn extends Piece implements Valued {
     }
 
     private Set<Move> getForwardMoves(Position start, Board board) {
-        Set<Move> moves = new HashSet<Move>();
+        Set<Move> moves = new HashSet<>();
         Direction moveDir = this.moveDirection;
         Position current = start;
 
@@ -75,42 +82,63 @@ public class Pawn extends Piece implements Valued {
             if (nextPiece != null) {
                 break;
             }
-
-            Move move = new Move(start, next);
-            moves.add(move);
-
+            // pawn can promote to one of four piece types after moving to last row
+            if (next.getRow() == 0 || next.getRow() == 7) {
+                this.PROMOTABLE.forEach(piece -> {
+                    Move move = new Move.Builder(start, next, board)
+                            .promotion(piece)
+                            .build();
+                    moves.add(move);
+                });
+            }
+            else {
+                Move move = new Move.Builder(start, next, board).build();
+                moves.add(move);
+            }
             current = next;
         }
         return moves;
     }
 
     private Set<Move> getDiagonalMoves(Position start, Board board) {
-        Set<Move> moves = new HashSet<Move>();
+        Set<Move> moves = new HashSet<>();
         for (Direction takeDir : this.takeDirections) {
             if (!start.hasNext(takeDir)) {
                 continue;
             }
             Position next = start.move(takeDir);
             Piece nextPiece = board.getPiece(next);
+
             if (enemy(nextPiece)) {
-                Move move = new Move(start, next);
-                moves.add(move);
+                // pawn can promote to one of four piece types after moving to last row
+                if (next.getRow() == 0 || next.getRow() == 7) {
+                    this.PROMOTABLE.forEach(piece -> {
+                        Move move = new Move.Builder(start, next, board)
+                                .promotion(piece)
+                                .build();
+                        moves.add(move);
+                    });
+                }
+                else {
+                    Move move = new Move.Builder(start, next, board).build();
+                    moves.add(move);
+                }
             }
         }
         return moves;
     }
 
     private Set<Move> getEnPassantMoves(Position start, Board board) {
-        Set<Move> moves = new HashSet<Move>();
+        Set<Move> moves = new HashSet<>();
         for (Direction takeDir : this.takeDirections) {
             if (!start.hasNext(takeDir)) {
                 continue;
             }
             Position next = start.move(takeDir);
-            PawnTrail trail = board.getPawnTrail(next);
-            if (enemy(trail)) {
-                Position takenPawnPos = next.move(this.moveDirection.getOpposite());
-                Move move = new Move(start, next, Move.EN_PASSANT);
+            if (board.getPawnTrailPos() == next) {
+                Move move = new Move.Builder(start, next, board)
+                        .detail(MoveDetail.EN_PASSANT)
+                        .build();
                 moves.add(move);
             }
         }

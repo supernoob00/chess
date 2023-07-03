@@ -11,6 +11,13 @@ public class King extends Piece {
         return color == Color.WHITE ? WHITE_KING : BLACK_KING;
     }
 
+    public static final Position WHITE_START_POS = Position.get("e1");
+    public static final Position BLACK_START_POS = Position.get("e8");
+
+    public static Position getStart(Color color) {
+        return (color == Color.WHITE) ? WHITE_START_POS : BLACK_START_POS;
+    }
+
     private final Set<Direction> moveDirections;
 
     protected King(Color color) {
@@ -25,15 +32,13 @@ public class King extends Piece {
             if (!start.hasNext(dir)) {
                 continue;
             }
-
             Position next = start.move(dir);
             Piece nextPiece = board.getPiece(next);
 
             if (friendly(nextPiece)) {
                 continue;
             }
-
-            Move move = new Move(start, next);
+            Move move = new Move.Builder(start, next, board).build();
             moves.add(move);
         }
         return moves;
@@ -45,27 +50,6 @@ public class King extends Piece {
         boolean withinDistance = start.rowDistance(threatened) <= 1
                 && start.colDistance(threatened) <= 1;
         return !friendly(threatenedPiece) && withinDistance;
-    }
-
-    public boolean inCheck(Position myPos, Board board) {
-        Color enemyColor = this.color.opposite();
-        for (Position enemyPos : board.getPiecePositions(enemyColor)) {
-            Piece enemyPiece = board.getPiece(enemyPos);
-            if (enemyPiece.threatens(enemyPos, myPos, board)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean inCheckmate(Position myPos, Board board) {
-        Set<Move> legalMoves = getLegalMoves(myPos, board);
-        return inCheck(myPos, board) && (legalMoves.size() == 0);
-    }
-
-    public boolean inStalemate(Position myPos, Board board) {
-        Set<Move> legalMoves = getLegalMoves(myPos, board);
-        return (!inCheck(myPos, board)) && (legalMoves.size() == 0);
     }
 
     @Override

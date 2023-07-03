@@ -4,7 +4,7 @@ import java.util.List;
 
 public class Player {
     private Board board;
-    private List<BoardObject> capturedPieces;
+    private List<Piece> capturedPieces;
 
     public Player(Board board) {
         this.board = board;

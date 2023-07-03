@@ -11,7 +11,7 @@ public abstract class Slider extends Piece {
 
     @Override
     public Set<Move> pseudoLegalMoves(Position start, Board board) {
-        Set<Move> moves = new HashSet<Move>();
+        Set<Move> moves = new HashSet<>();
         for (Direction dir : this.moveDirections) {
             Set<Move> dirMoves = directionalMoves(start, dir, board);
             moves.addAll(dirMoves);
@@ -24,7 +24,7 @@ public abstract class Slider extends Piece {
             Position start, Direction dir, Board board) {
 
         Position current = start;
-        Set<Move> moves = new HashSet<Move>();
+        Set<Move> moves = new HashSet<>();
         while (current.hasNext(dir)) {
             current = current.move(dir);
             Piece currentPiece = board.getPiece(current);
@@ -32,8 +32,11 @@ public abstract class Slider extends Piece {
             if (friendly(currentPiece)) {
                 break;
             }
+            if (currentPiece != null && currentPiece.getType() == PieceType.KING) {
+                System.out.println("ALERT!");
+            }
 
-            Move move = new Move(start, current);
+            Move move = new Move.Builder(start, current, board).build();
             moves.add(move);
 
             if (enemy(currentPiece)) {
@@ -47,7 +50,7 @@ public abstract class Slider extends Piece {
     public boolean threatens(Position start, Position threatened, Board board) {
         Direction dir = start.directionOf(threatened);
         Piece threatenedPiece = board.getPiece(threatened);
-        return enemy(threatenedPiece)
+        return !friendly(threatenedPiece)
                 && this.moveDirections.contains(dir)
                 && board.hasLineOfSight(start, threatened);
     }

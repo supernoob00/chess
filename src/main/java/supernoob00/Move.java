@@ -2,95 +2,126 @@ package supernoob00;
 
 public class Move {
 
-    public static final int EN_PASSANT = 1;
-    public static final int KINGSIDE_CASTLE = 2;
-    public static final int QUEENSIDE_CASTLE = 3;
-    public static final int CHECK = 4;
-    public static final int CHECKMATE = 5;
+    private final Position start;
+    private final Position end;
+    // may not be the same piece at end position - castlerook and castleking change
+    private final Piece moved;
+    private final Piece taken;
+    private final Color colorMoved;
+    // stored state of board, necessary in reverting moves
+    private final Position pawnTrailPos;
+    private final Piece promotion;
+    private final MoveDetail detail;
+    // only determined when move is actually applied to board
+    private KingStatus enemyKingStatus;
 
-    private Position start;
-    private Position end;
-    private boolean enPassant;
-    private boolean kingsideCastle;
-    private boolean queensideCastle;
-    private boolean check;
-    private boolean checkmate;
-
-    public Move(Position start, Position end) {
-        this.start = start;
-        this.end = end;
-    }
-
-    public Move(Position start, Position end, int checkOrMate, int special) {
-        this(start, end);
-        switch (checkOrMate) {
-            case CHECK -> this.check = true;
-            case CHECKMATE -> this.checkmate = true;
-            default -> throw new IllegalArgumentException();
-        }
-        switch (special) {
-            case EN_PASSANT -> this.enPassant = true;
-            case KINGSIDE_CASTLE -> this.kingsideCastle = true;
-            case QUEENSIDE_CASTLE -> this.queensideCastle = true;
-            default -> throw new IllegalArgumentException();
-        }
-    }
-
-    public Move(Position start, Position end, int checkOrMate) {
-        this(start, end);
-        switch (checkOrMate) {
-            case CHECK -> this.check = true;
-            case CHECKMATE -> this.checkmate = true;
-            case EN_PASSANT -> this.enPassant = true;
-            case KINGSIDE_CASTLE -> this.kingsideCastle = true;
-            case QUEENSIDE_CASTLE -> this.queensideCastle = true;
-            default -> throw new IllegalArgumentException();
-        }
+    // board parameter is before move is applied
+    private Move(Builder builder) {
+        this.start = builder.start;
+        this.end = builder.end;
+        this.moved = builder.moved;
+        this.taken = builder.taken;
+        this.colorMoved = builder.colorMoved;
+        this.pawnTrailPos = builder.pawnTrailPos;
+        this.promotion = builder.promotion;
+        this.detail = builder.detail;
+        this.enemyKingStatus = builder.enemyKingStatus;
     }
 
     public Position getStart() {
-        return this.start;
+        return start;
     }
 
     public Position getEnd() {
-        return this.end;
+        return end;
     }
 
-    public boolean isEnPassant() {
-        return this.enPassant;
+    public Position getPawnTrailPos() {
+        return this.pawnTrailPos;
     }
 
-    public boolean isCheck() {
-        return this.check;
+    public Piece getMoved() {
+        return moved;
     }
 
-    public boolean isCheckmate() {
-        return this.checkmate;
+    public Piece getTaken() {
+        return this.taken;
+    }
+
+    public Color getColorMoved() {
+        return this.colorMoved;
+    }
+
+    public Piece getPromotion() {
+        return this.promotion;
+    }
+
+    public MoveDetail getDetail() {
+        return this.detail;
+    }
+
+    public KingStatus getEnemyKingStatus() {
+        return this.enemyKingStatus;
     }
 
     public boolean isCastle() {
-        return this.kingsideCastle || this.queensideCastle;
+        return this.detail == MoveDetail.KINGSIDE_CASTLE
+                || this.detail == MoveDetail.QUEENSIDE_CASTLE;
     }
 
-    public boolean isKingsideCastle() {
-        return this.kingsideCastle;
-    }
-
-    public boolean isQueensideCastle() {
-        return this.queensideCastle;
-    }
-
-    public void setCheck() {
-        this.check = true;
-    }
-
-    public void setCheckmate() {
-        this.checkmate = true;
+    public void setKingStatus(KingStatus status) {
+        this.enemyKingStatus = status;
     }
 
     @Override
     public String toString() {
         return this.start.toString()
                 + this.end.toString();
+    }
+
+    public static class Builder {
+        private final Position start;
+        private final Position end;
+        // may not be the same piece at end position - castlerook and castleking change
+        private final Piece moved;
+        private Piece taken;
+        private final Color colorMoved;
+        // stored state of board, necessary in reverting moves
+        private final Position pawnTrailPos;
+        private Piece promotion;
+        private MoveDetail detail;
+        private KingStatus enemyKingStatus;
+
+        public Builder(Position start, Position end, Board board) {
+            this.start = start;
+            this.end = end;
+            this.moved = board.getPiece(start);
+            this.taken = board.getPiece(end);
+            this.colorMoved = moved.getColor();
+            this.pawnTrailPos = board.getPawnTrailPos();
+        }
+
+        public Builder promotion(Piece promotion) {
+            this.promotion = promotion;
+            this.detail = MoveDetail.PROMOTION;
+            return this;
+        }
+
+        public Builder detail(MoveDetail detail) {
+            this.detail = detail;
+            if (detail == MoveDetail.EN_PASSANT) {
+                this.taken = Pawn.getInstance(colorMoved.opposite());
+            }
+            return this;
+        }
+
+        public Builder kingStatus(KingStatus status) {
+            this.enemyKingStatus = status;
+            return this;
+        }
+
+        public Move build() {
+            return new Move(this);
+        }
     }
 }
