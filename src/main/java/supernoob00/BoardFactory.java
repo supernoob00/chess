@@ -22,7 +22,7 @@ public class BoardFactory {
             new AbstractMap.SimpleEntry<>('P', Pawn.getInstance(Color.WHITE)),
             new AbstractMap.SimpleEntry<>('p', Pawn.getInstance(Color.BLACK)));
 
-    public static Board makeBoard(int startingBoard) {
+    public static Board newBoard(int startingBoard) {
         Board board;
         switch (startingBoard) {
             case CLASSIC:
@@ -34,7 +34,7 @@ public class BoardFactory {
         return board;
     }
 
-    public static Board makeBoardFromFen(String fen) {
+    public static Board newBoard(String fen) {
         Board board = new Board();
 
         String[] parts = fen.split(" ");

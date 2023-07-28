@@ -4,9 +4,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Board {
-    private final Map<Position, Piece> board = new HashMap<>();
+    private final Map<Position, Piece> board = new HashMap<>(32);
 
     private Position pawnTrail = null;
+
+    private Position whiteKingPos = null;
+    private Position blackKingPos = null;
 
     public Piece getPiece(Position pos) {
         return this.board.get(pos);
@@ -15,6 +18,12 @@ public class Board {
     public void setPiece(Position pos, Piece piece) {
         if (piece == null) {
             throw new IllegalArgumentException("Piece cannot be null.");
+        }
+        else if (piece.getType() == PieceType.KING && piece.getColor() == Color.WHITE) {
+            whiteKingPos = pos;
+        }
+        else if (piece.getType() == PieceType.KING && piece.getColor() == Color.BLACK) {
+            blackKingPos = pos;
         }
         this.board.put(pos, piece);
     }
@@ -38,15 +47,7 @@ public class Board {
 
     // TODO: clean this up
     public Position getKingPos(Color color) {
-            Position kingPos =  this.board.entrySet().stream()
-                    .filter(e ->
-                    {boolean isKing = e.getValue().getType() == PieceType.KING;
-                     boolean sameColor = e.getValue().getColor() == color;
-                    return isKing && sameColor;})
-                    .findFirst()
-                    .get()
-                    .getKey();
-            return kingPos;
+            return color == Color.WHITE ? this.whiteKingPos : this.blackKingPos;
     }
 
     // applies move, then sets the KingStatus field of the move
